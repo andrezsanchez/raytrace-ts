@@ -1,0 +1,19 @@
+{
+  "name": "renderer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "brfs": "^1.4.3",
+    "browserify": "^13.0.0",
+    "es6ify": "^1.6.0",
+    "fs": "0.0.2",
+    "minimist": "^1.2.0",
+    "watchify": "^3.7.0"
+  }
+}
