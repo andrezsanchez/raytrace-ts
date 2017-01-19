@@ -7,20 +7,10 @@ function rgbString(color : Vector3) : string {
 }
 
 class Canvas {
-  //imageData : ImageData;
-  //d : Uint8ClampedArray;
-  constructor(private ctx : CanvasRenderingContext2D) {
-    //this.imageData = this.ctx.createImageData(1,1);
-    //this.d = this.imageData.data
-  }
+  constructor(private ctx : CanvasRenderingContext2D) {}
   dot(x : number, y : number, color : Vector3) {
     this.ctx.fillStyle = rgbString(color);
     this.ctx.fillRect(Math.floor(x), Math.floor(y), 1, 1);
-    //this.d[0] = color.x;
-    //this.d[1] = color.y;
-    //this.d[2] = color.z;
-    //this.d[3] = 255;
-    //this.ctx.putImageData(this.imageData, Math.floor(x), Math.floor(y));     
   }
 }
 
