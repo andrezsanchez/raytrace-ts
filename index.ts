@@ -51,7 +51,11 @@ const triangle : Triangle[] = [
 
 
 const shaders : ShaderInterface[] = [
-  (uvw : Vector3, c : Vector3) => {c.set(255, 0, 0);},
+  (uvw : Vector3, c : Vector3) => {
+    c.x = uvw.x * 128 + 128;
+    c.y = 0;
+    c.z = 0;
+  },
   (uvw : Vector3, c : Vector3) => {
     if (Math.sin(uvw.x * 100) > 0) {
       c.set(0, 250, 0);
