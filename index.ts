@@ -19,6 +19,7 @@ class Vector2 {
 }
 
 import Vector3 from './Vector3';
+import Triangle from './Triangle';
 
 class Vector4 {
   constructor(
@@ -29,61 +30,16 @@ class Vector4 {
   ) {}
 }
 
-class Triangle {
-  v : Vector3[];
-  normal : Vector3;
-  side : Vector3[] = new Array(3);
-  constructor(
-    a : Vector3,
-    b : Vector3,
-    c : Vector3
-  ) {
-    this.v = [a, b, c];
-
-    this.normal = Vector3.cross(
-      Vector3.subtract(this.v[1], this.v[0]),
-      Vector3.subtract(this.v[2], this.v[0])
-    );
-     
-    Vector3.normalizeIP(this.normal, this.normal);
-
-    for (let i = 0; i < 3; i++) {
-      this.side[i] = Vector3.cross(
-        this.normal,
-        Vector3.subtract(this.v[(i + 1) % 3], this.v[i])
-      );
-
-      const dist : number = Vector3.dot(
-        this.side[i],
-        Vector3.subtract(this.v[(i + 2) % 3], this.v[i])
-      );
-      Vector3.divideIP(this.side[i], dist, this.side[i]);
+class Mat4 {
+  data : number[] = Array(16);
+  constructor() {
+    for (let r = 0; r < 3; r++) {
+      for (let c = 0; c < 3; c++) {
+        this.data[r * 4 + c] = r === c ? 1 : 0;
+      }
     }
   }
-  baryProjection(x : Vector3, r : Vector3) {
-    r.set(
-      Vector3.dot(this.side[0], Vector3.subtract(x, this.v[0])),
-      Vector3.dot(this.side[1], Vector3.subtract(x, this.v[1])),
-      Vector3.dot(this.side[2], Vector3.subtract(x, this.v[2]))
-    );
-  }
-  baryToVector(uvw : Vector3, r : Vector3) {
-    Vector3.addIP(
-      Vector3.multiply(this.v[2], uvw.x),
-      Vector3.multiply(this.v[0], uvw.y),
-      r
-    );
-
-    Vector3.addIP(r, Vector3.multiply(this.v[1], uvw.z), r);
-  }
 }
-
-//class Surface {
-  //constructor
-//};
-
-const DOMCanvas = document.getElementsByTagName('canvas')[0];
-const ctx : CanvasRenderingContext2D | null = DOMCanvas.getContext('2d');
 
 const triangle : Triangle[] = [
   new Triangle(
@@ -106,6 +62,42 @@ const triangle : Triangle[] = [
 interface Shader {
   (uvw : Vector3, c : Vector3) : void;
 };
+
+interface SurfaceInterface {
+  ray(start : Vector3, end : Vector3, c : Vector3) : void;
+}
+
+class Surface implements SurfaceInterface {
+  constructor(
+    public triangles : Triangle[]
+  ) {}
+  ray(start : Vector3, end : Vector3, c : Vector3) : void {
+    let uvw : Vector3 = new Vector3();
+    let position : Vector3 = new Vector3();
+
+    let z = -Infinity;
+
+    let t : Triangle;
+    let shader : Shader;
+    for (let i = 0; i < triangle.length; i++) {
+      t = triangle[i];
+      shader = shaders[i];
+
+      position.set(x, y, 0);
+
+      t.baryProjection(position, uvw);
+
+      if (uvw.x > 0.0 && uvw.y > 0.0 && uvw.z > 0.0) {
+        t.baryToVector(uvw, position);
+
+        if (position.z > z) {
+          z = position.z;
+          shader(uvw, c);
+        }
+      }
+    }
+  }
+}
 
 const shaders : Shader[] = [
   (uvw : Vector3, c : Vector3) => {c.set(255, 0, 0);},
@@ -130,17 +122,24 @@ const shaders : Shader[] = [
   }
 ];
 
+const width = 512;
+const height = 512;
+
+const DOMCanvas : HTMLCanvasElement = document.getElementsByTagName('canvas')[0];
+const ctx : CanvasRenderingContext2D | null = DOMCanvas.getContext('2d');
+
+const offScreenCanvas : HTMLCanvasElement = document.createElement('canvas');
+offScreenCanvas.width = width;
+offScreenCanvas.height = height;
 
 if (ctx === null) {
   throw new Error('No context found');
 }
 else {
-  const canvas = new Canvas(<CanvasRenderingContext2D> ctx);
+  const canvas = new Canvas(<CanvasRenderingContext2D> offScreenCanvas.getContext('2d'));
   let color : Vector3 = new Vector3(0, 0, 0);
   let finalColor : Vector3 = new Vector3(0, 0, 0);
 
-  const width = 512;
-  const height = 512;
   const widthD2 = width / 2;
   const heightD2 = height / 2;
   const xRatio = 4 / width;
@@ -171,6 +170,8 @@ else {
     }
   }
   console.log(Date.now() - startTime);
+
+  ctx.drawImage(offScreenCanvas, 0, 0);
 }
 
 
