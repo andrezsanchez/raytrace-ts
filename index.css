@@ -1,78 +1,9 @@
 @charset "UTF-8";
 
-html {
-  height: 100%;
-}
-body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-}
 canvas {
-  display: inline-block;
-  vertical-align: top;
-  cursor: crosshair;
-  /*width: 80%;*/
-  /*height: 100%;*/
+  display: block;
+  margin: auto;
 }
-
-.sidebar {
-  box-sizing: border-box;
-  display: inline-block;
-  vertical-align: top;
-  width: 20%;
-  padding: 1em;
-}
-@media screen and (orientation: portrait) {
-  .sidebar {
-    display: block;
-    width: auto;
-  }
-}
-
-text {
-  dominant-baseline: hanging;
-  fill: white;
-  font-family: Arial;
-  font-size: 10pt;
-}
-
-svg {
-  /*display: block;*/
-  display: inline-block;
-  box-sizing: border-box;
-  width: 100%;
-  /*width: 600px;*/
-  height: 600px;
-  margin: 0;
-}
-
-svg > g > rect {
-  fill: transparent;
-  cursor: crosshair;
-}
-
-polygon, rect {
-  stroke: black;
-  stroke-width: 1.5;
-  fill: none;
-  cursor: crosshair;
-}
-
-line {
-  stroke: purple;
-  stroke-width: 1;
-  pointer-events: none;
-}
-
-circle {
-  fill: black;
-  cursor: crosshair;
-  /*pointer-events: none;*/
-}
-/*circle:hover {*/
-  /*fill: #0000FF;*/
-/*}*/
 
 .content {
   box-sizing: border-box;
@@ -92,14 +23,3 @@ circle {
     text-align: left;
   }
 }
-
-.tooltip rect {
-  pointer-events: none;
-  stroke: none;
-  /*stroke-width: 1;*/
-  pointer-events: none;
-  fill: rgba(0,0,0, .9)
-}
-
-/*.tooltip text {*/
-/*}*/
