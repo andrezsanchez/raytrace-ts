@@ -63,37 +63,77 @@ interface Shader {
   (uvw : Vector3, c : Vector3) : void;
 };
 
-interface SurfaceInterface {
-  ray(start : Vector3, end : Vector3, c : Vector3) : void;
+class RaycastResult {
+  hit: boolean = false;
+  color: Vector3 = new Vector3();
+  depth: number = 0.0;
+  constructor() {}
 }
 
-class Surface implements SurfaceInterface {
+class RaycastVars {
+  calcA : Vector3 = new Vector3();
+  calcB : Vector3 = new Vector3();
+  calcC : Vector3 = new Vector3();
+  //uvw : Vector3 = new Vector3();
+}
+
+interface SurfaceInterface {
+  ray(start : Vector3, end : Vector3, vars : RaycastVars, res : RaycastResult) : void;
+}
+
+class TrianglesSurface implements SurfaceInterface {
   constructor(
-    public triangles : Triangle[]
+    public triangles : Triangle[],
+    public shader : Shader
   ) {}
-  ray(start : Vector3, end : Vector3, c : Vector3) : void {
-    let uvw : Vector3 = new Vector3();
-    let position : Vector3 = new Vector3();
+  ray(start : Vector3, end : Vector3, vars : RaycastVars, res : RaycastResult) : void {
+    //const uvw : Vector3 = new Vector3();
+    //const position : Vector3 = new Vector3();
 
-    let z = -Infinity;
+    var depth = Infinity;
 
-    let t : Triangle;
-    let shader : Shader;
-    for (let i = 0; i < triangle.length; i++) {
-      t = triangle[i];
-      shader = shaders[i];
+    var tri : Triangle;
 
-      position.set(x, y, 0);
+    var startProj : number;
+    var endProj : number;
+    //let difference : Vector3 = new Vector3();
 
-      t.baryProjection(position, uvw);
+    //let calcA : Vector3 = new Vector3();
+    //let calcB : Vector3 = new Vector3();
+
+    res.hit = false;
+
+    var i;
+    for (i = 0; i < this.triangles.length; i++) {
+      tri = this.triangles[i];
+
+      //position.set(x, y, 0);
+      Vector3.subtractIP(start, tri.v[0], vars.calcA);
+      startProj = Vector3.dot(tri.normal, vars.calcA);
+
+      Vector3.subtractIP(end, tri.v[0], vars.calcA);
+      endProj = Vector3.dot(tri.normal, vars.calcA);
+
+      if (startProj <= 0.0 || endProj > 0.0) continue;
+
+      var l : number = startProj - endProj;
+      if (l < Number.EPSILON) continue;
+
+      var t : number = startProj / l;
+
+      var position = vars.calcC;
+      Vector3.multiplyIP(start, 1 - t, vars.calcA);
+      Vector3.multiplyIP(end, t, vars.calcB);
+      Vector3.addIP(vars.calcA, vars.calcB, position);
+
+      var uvw = vars.calcA;
+      tri.baryProjection(position, uvw);
 
       if (uvw.x > 0.0 && uvw.y > 0.0 && uvw.z > 0.0) {
-        t.baryToVector(uvw, position);
-
-        if (position.z > z) {
-          z = position.z;
-          shader(uvw, c);
-        }
+        res.hit = true;
+        res.depth = t;
+        this.shader(uvw, res.color);
+        return;
       }
     }
   }
@@ -122,6 +162,20 @@ const shaders : Shader[] = [
   }
 ];
 
+class PixelVars {
+  raycastVars : RaycastVars = new RaycastVars();
+  raycastRes : RaycastResult = new RaycastResult();
+  rayStart : Vector3 = new Vector3();
+  rayEnd : Vector3 = new Vector3();
+  constructor() {}
+}
+
+const surfaces : TrianglesSurface[] = [
+  new TrianglesSurface([triangle[0]], shaders[0]),
+  new TrianglesSurface([triangle[1]], shaders[1]),
+  new TrianglesSurface([triangle[2]], shaders[2])
+];
+
 const width = 512;
 const height = 512;
 
@@ -137,6 +191,7 @@ if (ctx === null) {
 }
 else {
   const canvas = new Canvas(<CanvasRenderingContext2D> offScreenCanvas.getContext('2d'));
+  //const canvas = new Canvas(<CanvasRenderingContext2D> ctx);
   let color : Vector3 = new Vector3(0, 0, 0);
   let finalColor : Vector3 = new Vector3(0, 0, 0);
 
@@ -149,6 +204,8 @@ else {
   const subsampleResolutionD2 = subsampleResolution / 2;
   const ssBlocks = subsampleResolution ** 2;
 
+  const pixelVars : PixelVars = new PixelVars();
+
   let startTime = Date.now();
   for (let y = 0.5; y < height; y++) {
     for (let x = 0.5; x < width; x++) {
@@ -160,7 +217,8 @@ else {
           const yOffset = (subY - subsampleResolutionD2) / subsampleResolution;
           pixel(
             (x + xOffset - widthD2) * xRatio,
-            -(y + yOffset - heightD2) * yRatio, color);
+            -(y + yOffset - heightD2) * yRatio,
+            pixelVars, color);
           Vector3.divideIP(color, ssBlocks, color);
           Vector3.addIP(finalColor, color, finalColor);
         }
@@ -174,34 +232,32 @@ else {
   ctx.drawImage(offScreenCanvas, 0, 0);
 }
 
-
-function pixel(x : number, y : number, c : Vector3) {
+function pixel(x : number, y : number, vars : PixelVars, c : Vector3) {
   c.x = 20;
   c.y = 20;
   c.z = 20;
 
-  let uvw : Vector3 = new Vector3();
-  let position : Vector3 = new Vector3();
+  //let rayStart : Vector3 = new Vector3();
+  //let rayEnd : Vector3 = new Vector3();
 
-  let z = -Infinity;
+  let depth = Infinity;
+  //let res : RaycastResult = new RaycastResult();
+  let s : SurfaceInterface;
 
-  let t : Triangle;
-  let shader : Shader;
-  for (let i = 0; i < triangle.length; i++) {
-    t = triangle[i];
-    shader = shaders[i];
+  for (let i = 0; i < surfaces.length; i++) {
+    s = surfaces[i];
+  //surfaces.forEach((s : SurfaceInterface) => {
+    vars.rayStart.set(x, y, 100);
+    vars.rayEnd.set(x, y, -100);
 
-    position.set(x, y, 0);
+    s.ray(vars.rayStart, vars.rayEnd, vars.raycastVars, vars.raycastRes);
 
-    t.baryProjection(position, uvw);
-
-    if (uvw.x > 0.0 && uvw.y > 0.0 && uvw.z > 0.0) {
-      t.baryToVector(uvw, position);
-
-      if (position.z > z) {
-        z = position.z;
-        shader(uvw, c);
+    if (vars.raycastRes.hit) {
+      if (vars.raycastRes.depth < depth) {
+        depth = vars.raycastRes.depth;
+        vars.raycastRes.color.copyTo(c);
       }
     }
   }
+  //});
 }

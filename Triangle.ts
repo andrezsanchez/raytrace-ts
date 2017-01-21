@@ -4,6 +4,8 @@ export default class Triangle {
   v : Vector3[];
   normal : Vector3;
   side : Vector3[] = new Array(3);
+  private calc : Vector3 = new Vector3();
+  private calc2 : Vector3 = new Vector3();
   constructor(
     a : Vector3,
     b : Vector3,
@@ -32,19 +34,21 @@ export default class Triangle {
     }
   }
   baryProjection(x : Vector3, r : Vector3) {
-    r.set(
-      Vector3.dot(this.side[0], Vector3.subtract(x, this.v[0])),
-      Vector3.dot(this.side[1], Vector3.subtract(x, this.v[1])),
-      Vector3.dot(this.side[2], Vector3.subtract(x, this.v[2]))
-    );
+    Vector3.subtractIP(x, this.v[0], this.calc);
+    r.x = Vector3.dot(this.side[0], this.calc);
+
+    Vector3.subtractIP(x, this.v[1], this.calc);
+    r.y = Vector3.dot(this.side[1], this.calc);
+
+    Vector3.subtractIP(x, this.v[2], this.calc);
+    r.z = Vector3.dot(this.side[2], this.calc);
   }
   baryToVector(uvw : Vector3, r : Vector3) {
-    Vector3.addIP(
-      Vector3.multiply(this.v[2], uvw.x),
-      Vector3.multiply(this.v[0], uvw.y),
-      r
-    );
+    Vector3.multiplyIP(this.v[2], uvw.x, this.calc);
+    Vector3.multiplyIP(this.v[0], uvw.y, this.calc2);
 
-    Vector3.addIP(r, Vector3.multiply(this.v[1], uvw.z), r);
+    Vector3.addIP(this.calc, this.calc2, r);
+    Vector3.multiplyIP(this.v[1], uvw.z, this.calc);
+    Vector3.addIP(r, this.calc, r);
   }
 }

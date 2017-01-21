@@ -9,6 +9,14 @@ export default class Vector3 {
     this.y = y;
     this.z = z;
   }
+  copy() : Vector3 {
+    return new Vector3(this.x, this.y, this.z);
+  }
+  copyTo(v : Vector3) {
+    v.x = this.x;
+    v.y = this.y;
+    v.z = this.z;
+  }
   static add(a : Vector3, b : Vector3) : Vector3 {
     return new Vector3(a.x + b.x, a.y + b.y, a.z + b.z);
   }
@@ -17,6 +25,11 @@ export default class Vector3 {
     r.y = a.y + b.y;
     r.z = a.z + b.z;
   }
+  add(v : Vector3) : void {
+    this.x += v.x;
+    this.y += v.y;
+    this.z += v.z;
+  }
   static subtract(a : Vector3, b : Vector3) : Vector3 {
     return new Vector3(a.x - b.x, a.y - b.y, a.z - b.z);
   }
@@ -24,6 +37,11 @@ export default class Vector3 {
     r.x = a.x - b.x;
     r.y = a.y - b.y;
     r.z = a.z - b.z;
+  }
+  subtract(v : Vector3) : void {
+    this.x -= v.x;
+    this.y -= v.y;
+    this.z -= v.z;
   }
   static multiply(a : Vector3, b : number) : Vector3 {
     return new Vector3(a.x * b, a.y * b, a.z * b);
