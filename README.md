@@ -10,6 +10,8 @@ try out TypeScript.
 ## installation
 
 ``` bash
+npm install -g typescript browserify
+
 git clone https://github.com/andrezsanchez/raytrace-ts.git
 cd raytrace-ts
 npm install
