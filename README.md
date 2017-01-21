@@ -5,7 +5,7 @@ try out TypeScript.
 
 ## Screenshot
 
-![Screenshot][screenshot.png]
+![Screenshot](screenshot.png)
 
 ## installation
 
