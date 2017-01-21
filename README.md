@@ -12,6 +12,7 @@ try out TypeScript.
 ``` bash
 git clone https://github.com/andrezsanchez/raytrace-ts.git
 cd raytrace-ts
+npm install
 make
 
 # serve the local directory somehow
