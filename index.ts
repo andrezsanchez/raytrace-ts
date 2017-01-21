@@ -1,35 +1,8 @@
-function invariant(cond : boolean, err : string) {
-  if (!cond) throw new Error(err);
-}
-
-class Vector2 {
-  constructor(public x : number, public y : number) {}
-}
 import Canvas from './Canvas';
 import Vector3 from './Vector3';
 import Triangle from './Triangle';
 import { RaycastResult, RaycastVars, TrianglesSurface } from './TrianglesSurface';
 import ShaderInterface from './ShaderInterface';
-
-class Vector4 {
-  constructor(
-    public x : number,
-    public y : number,
-    public z : number,
-    public w : number
-  ) {}
-}
-
-class Mat4 {
-  data : number[] = Array(16);
-  constructor() {
-    for (let r = 0; r < 3; r++) {
-      for (let c = 0; c < 3; c++) {
-        this.data[r * 4 + c] = r === c ? 1 : 0;
-      }
-    }
-  }
-}
 
 const triangle : Triangle[] = [
   new Triangle(
