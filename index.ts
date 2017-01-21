@@ -2,24 +2,14 @@ function invariant(cond : boolean, err : string) {
   if (!cond) throw new Error(err);
 }
 
-function rgbString(color : Vector3) : string {
-  return 'rgb(' + Math.floor(color.x) + ',' + Math.floor(color.y) + ',' + Math.floor(color.z) + ')';
-}
-
-class Canvas {
-  constructor(private ctx : CanvasRenderingContext2D) {}
-  dot(x : number, y : number, color : Vector3) {
-    this.ctx.fillStyle = rgbString(color);
-    this.ctx.fillRect(Math.floor(x), Math.floor(y), 1, 1);
-  }
-}
-
 class Vector2 {
   constructor(public x : number, public y : number) {}
 }
-
+import Canvas from './Canvas';
 import Vector3 from './Vector3';
 import Triangle from './Triangle';
+import { RaycastResult, RaycastVars, TrianglesSurface } from './TrianglesSurface';
+import ShaderInterface from './ShaderInterface';
 
 class Vector4 {
   constructor(
@@ -59,87 +49,8 @@ const triangle : Triangle[] = [
   ),
 ];
 
-interface Shader {
-  (uvw : Vector3, c : Vector3) : void;
-};
 
-class RaycastResult {
-  hit: boolean = false;
-  color: Vector3 = new Vector3();
-  depth: number = 0.0;
-  constructor() {}
-}
-
-class RaycastVars {
-  calcA : Vector3 = new Vector3();
-  calcB : Vector3 = new Vector3();
-  calcC : Vector3 = new Vector3();
-  //uvw : Vector3 = new Vector3();
-}
-
-interface SurfaceInterface {
-  ray(start : Vector3, end : Vector3, vars : RaycastVars, res : RaycastResult) : void;
-}
-
-class TrianglesSurface implements SurfaceInterface {
-  constructor(
-    public triangles : Triangle[],
-    public shader : Shader
-  ) {}
-  ray(start : Vector3, end : Vector3, vars : RaycastVars, res : RaycastResult) : void {
-    //const uvw : Vector3 = new Vector3();
-    //const position : Vector3 = new Vector3();
-
-    var depth = Infinity;
-
-    var tri : Triangle;
-
-    var startProj : number;
-    var endProj : number;
-    //let difference : Vector3 = new Vector3();
-
-    //let calcA : Vector3 = new Vector3();
-    //let calcB : Vector3 = new Vector3();
-
-    res.hit = false;
-
-    var i;
-    for (i = 0; i < this.triangles.length; i++) {
-      tri = this.triangles[i];
-
-      //position.set(x, y, 0);
-      Vector3.subtractIP(start, tri.v[0], vars.calcA);
-      startProj = Vector3.dot(tri.normal, vars.calcA);
-
-      Vector3.subtractIP(end, tri.v[0], vars.calcA);
-      endProj = Vector3.dot(tri.normal, vars.calcA);
-
-      if (startProj <= 0.0 || endProj > 0.0) continue;
-
-      var l : number = startProj - endProj;
-      if (l < Number.EPSILON) continue;
-
-      var t : number = startProj / l;
-
-      var position = vars.calcC;
-      Vector3.multiplyIP(start, 1 - t, vars.calcA);
-      Vector3.multiplyIP(end, t, vars.calcB);
-      Vector3.addIP(vars.calcA, vars.calcB, position);
-
-      var uvw = vars.calcA;
-      tri.baryProjection(position, uvw);
-
-      if (uvw.x > 0.0 && uvw.y > 0.0 && uvw.z > 0.0) {
-        res.hit = true;
-        res.depth = t;
-        this.shader(uvw, res.color);
-        return;
-      }
-    }
-  }
-}
-
-const shaders : Shader[] = [
+const shaders : ShaderInterface[] = [
   (uvw : Vector3, c : Vector3) => {c.set(255, 0, 0);},
   (uvw : Vector3, c : Vector3) => {
     if (Math.sin(uvw.x * 100) > 0) {
@@ -237,16 +148,11 @@ function pixel(x : number, y : number, vars : PixelVars, c : Vector3) {
   c.y = 20;
   c.z = 20;
 
-  //let rayStart : Vector3 = new Vector3();
-  //let rayEnd : Vector3 = new Vector3();
-
   let depth = Infinity;
-  //let res : RaycastResult = new RaycastResult();
-  let s : SurfaceInterface;
+  let s : TrianglesSurface;
 
   for (let i = 0; i < surfaces.length; i++) {
     s = surfaces[i];
-  //surfaces.forEach((s : SurfaceInterface) => {
     vars.rayStart.set(x, y, 100);
     vars.rayEnd.set(x, y, -100);
 
@@ -259,5 +165,4 @@ function pixel(x : number, y : number, vars : PixelVars, c : Vector3) {
       }
     }
   }
-  //});
 }
